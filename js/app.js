@@ -62,7 +62,7 @@ const main = () => {
     (angularPlayer, Notification, loWeb, $translate) => {
       angularPlayer.setBootstrapTrack(
         loWeb.bootstrapTrack(
-          () => {},
+          () => { },
           () => {
             const d = {
               message: $translate.instant('_COPYRIGHT_ISSUE'),
@@ -475,6 +475,29 @@ const main = () => {
           $scope.showPlaylist($scope.list_id);
         });
       };
+
+
+      $scope.downloadAudioFile = (song) => {
+        var provider = getProviderByItemId(song.id)
+        console.log(provider)
+        var sound = {}
+        var track = song
+        var success = () => {
+          console.log('---->downloadFile'); console.log(sound);
+
+          const { ipcRenderer } = require('electron');
+          ipcRenderer.send('currentDownloadFile', sound);
+        }
+        var failure = () => { Notification.info($translate.instant('_FAIL_OPEN_PLAYLIST_URL')); }
+        var hm = $http
+        var se = () => { }
+        try {
+          provider.bootstrap_track(sound, track, success, failure, hm, se)
+        } catch (error) {
+          Notification.info($translate.instant('_FAIL_OPEN_PLAYLIST_URL'));
+        }
+      };
+
 
       $scope.removeSongFromPlaylist = (song, list_id) => {
         const url = '/remove_track_from_myplaylist';
@@ -957,7 +980,7 @@ const main = () => {
         const track = angularPlayer.getTrack($scope.scrobbleTrackId);
         const startTimestamp = Math.round((new Date()).valueOf() / 1000);
         $scope.scrobbleTimer.start(() => {
-          lastfm.scrobble(startTimestamp, track.title, track.artist, track.album, () => {});
+          lastfm.scrobble(startTimestamp, track.title, track.artist, track.album, () => { });
         });
         // according to scrobble rule
         // http://www.last.fm/api/scrobbling
@@ -1060,7 +1083,7 @@ const main = () => {
 
         $rootScope.page_title = `▶ ${track.title} - ${track.artist}`;
         if (lastfm.isAuthorized()) {
-          lastfm.sendNowPlaying(track.title, track.artist, () => {});
+          lastfm.sendNowPlaying(track.title, track.artist, () => { });
         }
 
         if (track.lyric_url !== null) {
@@ -1237,7 +1260,7 @@ const main = () => {
   app.controller('InstantSearchController', ['$scope', '$http', '$timeout', '$rootScope', 'angularPlayer', 'loWeb',
     ($scope, $http, $timeout, $rootScope, angularPlayer, loWeb) => {
       // notice: douban is skipped so array should plus 1
-      $scope.originpagelog = Array(getAllProviders().length+1).fill(1);  // [网易,虾米,QQ,NULL,酷狗,酷我,bilibili, migu]
+      $scope.originpagelog = Array(getAllProviders().length + 1).fill(1);  // [网易,虾米,QQ,NULL,酷狗,酷我,bilibili, migu]
       $scope.tab = 0;
       $scope.keywords = '';
       $scope.loading = false;
@@ -1266,7 +1289,7 @@ const main = () => {
           $scope.totalpage = Math.ceil(totalItem / 20);
           $scope.totalpagelog[$scope.tab] = $scope.totalpage;
         } else {
-        // just switch tab
+          // just switch tab
           $scope.totalpage = $scope.totalpagelog[$scope.tab];
         }
       }
@@ -1373,6 +1396,8 @@ const main = () => {
     link(scope, element, attrs) {
       element.bind('click', (event) => {
         angularPlayer.addTrack(scope.song);
+        console.log(scope.song)
+        window.song = scope.song
         angularPlayer.playTrack(scope.song.id);
       });
     },
@@ -1392,6 +1417,7 @@ const main = () => {
       },
     }),
   ]);
+
 
   app.directive('openUrl', ['angularPlayer', '$window',
     (angularPlayer, $window) => ({
